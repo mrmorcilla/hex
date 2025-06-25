@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Dibuja 25x25</title>
+  <title>Dibuja 25x25 Avanzado</title>
   <style>
     body { font-family: sans-serif; text-align: center; background: #222; color: white; }
     .palette { margin-bottom: 10px; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
@@ -11,6 +11,7 @@
     .grid { display: grid; grid-template-columns: repeat(25, 16px); margin: 0 auto; width: max-content; }
     .pixel { width: 16px; height: 16px; border: 1px solid #444; cursor: pointer; }
     #result { margin-top: 15px; word-break: break-word; padding: 10px; background: #111; border: 1px solid #444; }
+    input[type="file"] { margin: 10px auto; }
   </style>
 </head>
 <body>
@@ -20,8 +21,8 @@
 <div class="palette" id="palette"></div>
 <div class="grid" id="grid"></div>
 
-<button onclick="generateURL()">Crear</button>
-
+<button onclick="generateURL()">Crear</button><br><br>
+<input type="file" accept="image/*" onchange="importImage(event)">
 <div id="result"></div>
 
 <script>
@@ -55,6 +56,7 @@
   ];
 
   let selectedColor = 0;
+  let mouseDown = false;
 
   const palette = document.getElementById("palette");
   colors.forEach((color, index) => {
@@ -76,11 +78,23 @@
     const pixel = document.createElement("div");
     pixel.className = "pixel";
     pixel.dataset.color = 0;
-    pixel.onclick = () => {
-      pixel.style.background = colors[selectedColor].hex;
-      pixel.dataset.color = selectedColor;
+    pixel.style.background = colors[0].hex;
+
+    pixel.onmousedown = (e) => {
+      mouseDown = true;
+      paint(pixel);
+    };
+    pixel.onmouseover = () => {
+      if (mouseDown) paint(pixel);
     };
     grid.appendChild(pixel);
+  }
+
+  document.body.onmouseup = () => mouseDown = false;
+
+  function paint(pixel) {
+    pixel.style.background = colors[selectedColor].hex;
+    pixel.dataset.color = selectedColor;
   }
 
   function generateURL() {
@@ -91,6 +105,56 @@
       <p><strong>URL generada:</strong></p>
       <code>${url}</code>
     `;
+  }
+
+  function hexToRGB(hex) {
+    const bigint = parseInt(hex.replace("#", ""), 16);
+    return [ (bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255 ];
+  }
+
+  function getClosestColorIndex(r, g, b) {
+    let minDist = Infinity;
+    let bestIndex = 0;
+    colors.forEach((c, i) => {
+      const [cr, cg, cb] = hexToRGB(c.hex);
+      const dist = Math.sqrt((r-cr)**2 + (g-cg)**2 + (b-cb)**2);
+      if (dist < minDist) {
+        minDist = dist;
+        bestIndex = i;
+      }
+    });
+    return bestIndex;
+  }
+
+  function importImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    img.onload = function() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 25;
+      canvas.height = 25;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, 25, 25);
+      const imgData = ctx.getImageData(0, 0, 25, 25).data;
+
+      const pixels = document.querySelectorAll('.pixel');
+      for (let i = 0; i < 625; i++) {
+        const r = imgData[i * 4];
+        const g = imgData[i * 4 + 1];
+        const b = imgData[i * 4 + 2];
+        const index = getClosestColorIndex(r, g, b);
+        pixels[i].dataset.color = index;
+        pixels[i].style.background = colors[index].hex;
+      }
+    };
   }
 </script>
 
