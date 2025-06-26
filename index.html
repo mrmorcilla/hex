@@ -12,11 +12,13 @@
     .pixel { width: 16px; height: 16px; border: 1px solid #444; cursor: pointer; }
     #result { margin-top: 15px; word-break: break-word; padding: 10px; background: #111; border: 1px solid #444; }
     input[type="file"] { margin: 10px auto; }
+    #meta p { margin: 4px 0; font-size: 0.9em; color: #aaa; }
   </style>
 </head>
 <body>
 
 <h2>Dibuja tu imagen 25x25</h2>
+<div id="meta"></div>
 
 <div class="palette" id="palette"></div>
 <div class="grid" id="grid"></div>
@@ -155,6 +157,19 @@
         pixels[i].style.background = colors[index].hex;
       }
     };
+  }
+
+  // Mostrar autor, título y fecha desde los parámetros
+  const params = new URLSearchParams(window.location.search);
+  const autor = params.get("a");
+  const titulo = params.get("t");
+  const fecha = params.get("f");
+
+  const meta = document.getElementById("meta");
+  if (autor || titulo || fecha) {
+    if (titulo) meta.innerHTML += `<p><strong>Título:</strong> ${titulo}</p>`;
+    if (autor) meta.innerHTML += `<p><strong>Autor:</strong> ${autor}</p>`;
+    if (fecha) meta.innerHTML += `<p><strong>Fecha:</strong> ${fecha}</p>`;
   }
 </script>
 
