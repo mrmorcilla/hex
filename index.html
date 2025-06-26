@@ -11,7 +11,8 @@
     .grid { display: grid; grid-template-columns: repeat(25, 16px); margin: 0 auto; width: max-content; }
     .pixel { width: 16px; height: 16px; border: 1px solid #444; cursor: pointer; }
     #result { margin-top: 15px; word-break: break-word; padding: 10px; background: #111; border: 1px solid #444; }
-    input[type="file"] { margin: 10px auto; }
+    input[type="file"], input[type="text"] { margin: 5px auto; display: block; }
+    input[type="text"] { padding: 5px; width: 200px; }
     #meta p { margin: 4px 0; font-size: 0.9em; color: #aaa; }
   </style>
 </head>
@@ -19,6 +20,9 @@
 
 <h2>Dibuja tu imagen 25x25</h2>
 <div id="meta"></div>
+
+<input type="text" id="autorInput" placeholder="Autor">
+<input type="text" id="tituloInput" placeholder="Título">
 
 <div class="palette" id="palette"></div>
 <div class="grid" id="grid"></div>
@@ -100,9 +104,19 @@
   }
 
   function generateURL() {
+    const autor = document.getElementById("autorInput").value.trim();
+    const titulo = document.getElementById("tituloInput").value.trim();
+
+    const fecha = new Date();
+    const dia = fecha.getDate();
+    const mes = fecha.getMonth() + 1;
+    const año = fecha.getFullYear();
+    const fechaFormateada = `${dia}-${mes}-${año}`;
+
     const data = Array.from(document.querySelectorAll('.pixel')).map(p => p.dataset.color);
     const param = data.join("x");
-    const url = `https://img.epa.rbx?q=${param}`;
+
+    const url = `https://img.epa.rbx?q=${param}&a=${encodeURIComponent(autor)}&t=${encodeURIComponent(titulo)}&f=${encodeURIComponent(fechaFormateada)}`;
     document.getElementById("result").innerHTML = `
       <p><strong>URL generada:</strong></p>
       <code>${url}</code>
@@ -157,19 +171,6 @@
         pixels[i].style.background = colors[index].hex;
       }
     };
-  }
-
-  // Mostrar autor, título y fecha desde los parámetros
-  const params = new URLSearchParams(window.location.search);
-  const autor = params.get("a");
-  const titulo = params.get("t");
-  const fecha = params.get("f");
-
-  const meta = document.getElementById("meta");
-  if (autor || titulo || fecha) {
-    if (titulo) meta.innerHTML += `<p><strong>Título:</strong> ${titulo}</p>`;
-    if (autor) meta.innerHTML += `<p><strong>Autor:</strong> ${autor}</p>`;
-    if (fecha) meta.innerHTML += `<p><strong>Fecha:</strong> ${fecha}</p>`;
   }
 </script>
 
