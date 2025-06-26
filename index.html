@@ -11,54 +11,44 @@
     .grid { display: grid; grid-template-columns: repeat(25, 16px); margin: 0 auto; width: max-content; }
     .pixel { width: 16px; height: 16px; border: 1px solid #444; cursor: pointer; }
     #result { margin-top: 15px; word-break: break-word; padding: 10px; background: #111; border: 1px solid #444; }
-    input[type="file"], input[type="text"] { margin: 5px auto; display: block; }
-    input[type="text"] { padding: 5px; width: 200px; }
-    #meta p { margin: 4px 0; font-size: 0.9em; color: #aaa; }
+    input[type="file"], input[type="text"] { margin: 5px auto; display: block; padding: 5px; width: 250px; }
+    #result button { margin-top: 5px; padding: 5px 10px; }
   </style>
 </head>
 <body>
 
 <h2>Dibuja tu imagen 25x25</h2>
-<div id="meta"></div>
 
 <input type="text" id="autorInput" placeholder="Autor">
 <input type="text" id="tituloInput" placeholder="Título">
+<input type="text" id="enlaceInput" placeholder="Enlace (opcional)">
 
 <div class="palette" id="palette"></div>
 <div class="grid" id="grid"></div>
 
 <button onclick="generateURL()">Crear</button><br><br>
 <input type="file" accept="image/*" onchange="importImage(event)">
-<div id="result"></div>
+<div id="result">
+  <p><strong>URL generada:</strong></p>
+  <code id="urlTexto"></code><br>
+  <button onclick="copiarURL()">Copiar URL</button>
+</div>
 
 <script>
   const colors = [
-    { name: "Negro", hex: "#000000" },
-    { name: "Blanco", hex: "#FFFFFF" },
-    { name: "Rojo", hex: "#FF0000" },
-    { name: "Verde", hex: "#00FF00" },
-    { name: "Azul", hex: "#0000FF" },
-    { name: "Amarillo", hex: "#FFFF00" },
-    { name: "Cian", hex: "#00FFFF" },
-    { name: "Magenta", hex: "#FF00FF" },
-    { name: "Gris claro", hex: "#CCCCCC" },
-    { name: "Gris medio", hex: "#888888" },
-    { name: "Gris oscuro", hex: "#444444" },
-    { name: "Marrón", hex: "#8B4513" },
-    { name: "Naranja", hex: "#FFA500" },
-    { name: "Rosa claro", hex: "#FFB6C1" },
-    { name: "Verde oliva", hex: "#808000" },
-    { name: "Verde mar", hex: "#2E8B57" },
-    { name: "Azul cielo", hex: "#87CEEB" },
-    { name: "Azul oscuro", hex: "#00008B" },
-    { name: "Rojo oscuro", hex: "#8B0000" },
-    { name: "Dorado", hex: "#FFD700" },
-    { name: "Púrpura", hex: "#800080" },
-    { name: "Coral", hex: "#FF7F50" },
-    { name: "Aqua", hex: "#7FFFD4" },
-    { name: "Lavanda", hex: "#E6E6FA" },
-    { name: "Lima", hex: "#BFFF00" },
-    { name: "Carbón", hex: "#1A1A1A" }
+    { name: "Negro", hex: "#000000" }, { name: "Blanco", hex: "#FFFFFF" },
+    { name: "Rojo", hex: "#FF0000" }, { name: "Verde", hex: "#00FF00" },
+    { name: "Azul", hex: "#0000FF" }, { name: "Amarillo", hex: "#FFFF00" },
+    { name: "Cian", hex: "#00FFFF" }, { name: "Magenta", hex: "#FF00FF" },
+    { name: "Gris claro", hex: "#CCCCCC" }, { name: "Gris medio", hex: "#888888" },
+    { name: "Gris oscuro", hex: "#444444" }, { name: "Marrón", hex: "#8B4513" },
+    { name: "Naranja", hex: "#FFA500" }, { name: "Rosa claro", hex: "#FFB6C1" },
+    { name: "Verde oliva", hex: "#808000" }, { name: "Verde mar", hex: "#2E8B57" },
+    { name: "Azul cielo", hex: "#87CEEB" }, { name: "Azul oscuro", hex: "#00008B" },
+    { name: "Rojo oscuro", hex: "#8B0000" }, { name: "Dorado", hex: "#FFD700" },
+    { name: "Púrpura", hex: "#800080" }, { name: "Coral", hex: "#FF7F50" },
+    { name: "Aqua", hex: "#7FFFD4" }, { name: "Lavanda", hex: "#E6E6FA" },
+    { name: "Lima", hex: "#BFFF00" }, { name: "Carbón", hex: "#1A1A1A" }
   ];
 
   let selectedColor = 0;
@@ -86,13 +76,8 @@
     pixel.dataset.color = 0;
     pixel.style.background = colors[0].hex;
 
-    pixel.onmousedown = (e) => {
-      mouseDown = true;
-      paint(pixel);
-    };
-    pixel.onmouseover = () => {
-      if (mouseDown) paint(pixel);
-    };
+    pixel.onmousedown = () => { mouseDown = true; paint(pixel); };
+    pixel.onmouseover = () => { if (mouseDown) paint(pixel); };
     grid.appendChild(pixel);
   }
 
@@ -106,6 +91,7 @@
   function generateURL() {
     const autor = document.getElementById("autorInput").value.trim();
     const titulo = document.getElementById("tituloInput").value.trim();
+    const enlace = document.getElementById("enlaceInput").value.trim();
 
     const fecha = new Date();
     const dia = fecha.getDate();
@@ -116,11 +102,21 @@
     const data = Array.from(document.querySelectorAll('.pixel')).map(p => p.dataset.color);
     const param = data.join("x");
 
-    const url = `https://img.epa.rbx?q=${param}&a=${encodeURIComponent(autor)}&t=${encodeURIComponent(titulo)}&f=${encodeURIComponent(fechaFormateada)}`;
-    document.getElementById("result").innerHTML = `
-      <p><strong>URL generada:</strong></p>
-      <code>${url}</code>
-    `;
+    let url = `https://img.epa.rbx?q=${param}&a=${encodeURIComponent(autor)}&t=${encodeURIComponent(titulo)}&f=${encodeURIComponent(fechaFormateada)}`;
+    if (enlace) {
+      url += `&e=${encodeURIComponent(enlace)}`;
+    }
+
+    document.getElementById("urlTexto").innerText = url;
+  }
+
+  function copiarURL() {
+    const url = document.getElementById("urlTexto").innerText;
+    navigator.clipboard.writeText(url).then(() => {
+      alert("URL copiada al portapapeles!");
+    }).catch(() => {
+      alert("Error al copiar la URL.");
+    });
   }
 
   function hexToRGB(hex) {
@@ -129,15 +125,11 @@
   }
 
   function getClosestColorIndex(r, g, b) {
-    let minDist = Infinity;
-    let bestIndex = 0;
+    let minDist = Infinity, bestIndex = 0;
     colors.forEach((c, i) => {
       const [cr, cg, cb] = hexToRGB(c.hex);
       const dist = Math.sqrt((r-cr)**2 + (g-cg)**2 + (b-cb)**2);
-      if (dist < minDist) {
-        minDist = dist;
-        bestIndex = i;
-      }
+      if (dist < minDist) { minDist = dist; bestIndex = i; }
     });
     return bestIndex;
   }
@@ -148,24 +140,19 @@
 
     const img = new Image();
     const reader = new FileReader();
-    reader.onload = function(e) {
-      img.src = e.target.result;
-    };
+    reader.onload = (e) => { img.src = e.target.result; };
     reader.readAsDataURL(file);
 
-    img.onload = function() {
+    img.onload = () => {
       const canvas = document.createElement("canvas");
-      canvas.width = 25;
-      canvas.height = 25;
+      canvas.width = 25; canvas.height = 25;
       const ctx = canvas.getContext("2d");
       ctx.drawImage(img, 0, 0, 25, 25);
       const imgData = ctx.getImageData(0, 0, 25, 25).data;
 
       const pixels = document.querySelectorAll('.pixel');
       for (let i = 0; i < 625; i++) {
-        const r = imgData[i * 4];
-        const g = imgData[i * 4 + 1];
-        const b = imgData[i * 4 + 2];
+        const r = imgData[i * 4], g = imgData[i * 4 + 1], b = imgData[i * 4 + 2];
         const index = getClosestColorIndex(r, g, b);
         pixels[i].dataset.color = index;
         pixels[i].style.background = colors[index].hex;
