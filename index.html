@@ -102,7 +102,7 @@
     const data = Array.from(document.querySelectorAll('.pixel')).map(p => p.dataset.color);
     const param = data.join("x");
 
-    let url = `https://img.epa.rbx?q=${param}&a=${encodeURIComponent(autor)}&t=${encodeURIComponent(titulo)}&f=${encodeURIComponent(fechaFormateada)}`;
+    let url = `img.epa.rbx?q=${param}&a=${encodeURIComponent(autor)}&t=${encodeURIComponent(titulo)}&f=${encodeURIComponent(fechaFormateada)}`;
     if (enlace) {
       url += `&e=${encodeURIComponent(enlace)}`;
     }
